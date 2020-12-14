@@ -1,0 +1,30 @@
+{
+  "name": "feedback",
+  "version": "1.0.0",
+  "description": "otgonbayar",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/otgonbayarzz/feedback.git"
+  },
+  "author": "otgonbayar.eb",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/otgonbayarzz/feedback/issues"
+  },
+  "homepage": "https://github.com/otgonbayarzz/feedback#readme",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "http": "^0.0.1-security",
+    "lodash": "^4.17.20",
+    "md5": "^2.3.0",
+    "mongodb": "^3.6.3",
+    "mysql": "^2.18.1",
+    "nodemon": "^2.0.6"
+  }
+}
