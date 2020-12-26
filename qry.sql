@@ -23,3 +23,16 @@ create table company
 	primary key (id)
 )
 
+#prospect
+create table prospect
+(
+	id int auto_increment,
+	firstname varchar(100),
+	lastname varchar(100),
+	phone_number varchar(100),
+	reg_number varchar(100),
+	image LONGTEXT,
+	primary key (id)
+)
+
+#
