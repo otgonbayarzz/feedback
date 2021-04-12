@@ -3,10 +3,11 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 
-const { setup: company } = require("./src/company");
-const { setup: contract } = require("./src/contract");
-const { setup: prospect } = require("./src/prospect");
-const { setup: user } = require("./src/user");
+const { setup: payment } = require("./src/payment");
+const { setup: paymentItemDetail } = require("./src/paymentItemDetail");
+// const { setup: contract } = require("./src/contract");
+// const { setup: prospect } = require("./src/prospect");
+// const { setup: user } = require("./src/user");
 
 const Singleton = (function f() {
   let instance;
@@ -39,8 +40,9 @@ http.listen(3001, () => {
   console.log("api on");
   const instance = Singleton.getInstance();
 
-  company({ app, instance });
-  contract({ app, instance });
-  prospect({ app, instance });
-  user({ app, instance });
+  payment({ app, instance });
+  paymentItemDetail({ app, instance });
+  // contract({ app, instance });
+  // prospect({ app, instance });
+  // user({ app, instance });
 });
