@@ -12,8 +12,6 @@ function setup({ app, instance }) {
             message: "",
         };
         try {
-            console.log("-----", `mssql://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.DB_HOST}/${process.env.DB_MAIN}`);
-            // make sure that any items are correctly URL encoded in the connection string
             await sql.connect(`mssql://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.DB_HOST}/${process.env.DB_MAIN}`)
             const result = await sql.query`                
             select distinct a.SaleNo as SaleNo, a.StationName StationName, a.CardAmount as CardAmount, 
@@ -86,9 +84,10 @@ function setup({ app, instance }) {
 
                 await sql.connect(`mssql://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.DB_HOST}/${process.env.DB_MAIN}`)
                 const result = await sql.query(qry.slice(0, -1));
+                console.log(qry)
                 resp.message = `Affected rows count : ${result.rowsAffected[0]}`
             } catch (err) {
-                //
+                console.log(err)
             }
 
         }
