@@ -11,17 +11,96 @@ function setup({ app, instance }) {
             data: [],
             message: "",
         };
+        // stationNo=${stationNo}&
+        // itemName=${itemName}&
+        // startDate=${startDate}&
+        // endDate=${endDate}&
+        let perPage = req.query.perPage ? req.query.perPage : 50;
+        // let perPage = 2;
+        let pageNumber = req.query.pageNumber ? req.query.pageNumber : 1;
+        let itemName = req.query.itemName && req.query.itemName !== undefined && req.query.itemName !== "undefined" ? req.query.itemName : "";
+        let stationNo = req.query.stationNo && req.query.stationNo !== undefined && req.query.stationNo !== "undefined" ? req.query.stationNo : "";
+        let startDate = req.query.startDate && req.query.startDate !== undefined && req.query.startDate !== "undefined" ? req.query.startDate : "";
+        let endDate = req.query.endDate && req.query.endDate !== undefined && req.query.endDate !== "undefined" ? req.query.endDate : "";
+        let fQuery = ``
+        if (itemName.length > 0 || startDate.length > 0 || stationNo.length > 0 || endDate.length > 0) {
+
+            if (itemName.length > 0) fQuery = fQuery + ` AND b.ItemName =N'${itemName}' `
+
+            if (stationNo.length > 0) fQuery = fQuery + `AND b.StationNo =N'${stationNo}' `
+
+            if (startDate.length > 0 && endDate.length > 0) {
+                fQuery = fQuery + `AND a.SaleDate BETWEEN '${startDate}' AND  '${endDate}' `
+
+            }
+            else {
+                if (startDate.length > 0) fQuery = fQuery + `AND a.SaleDate > '${startDate}' `
+
+                if (endDate.length > 0) fQuery = fQuery + ` AND a.SaleDate < '${endDate} '`
+
+            }
+            console.log(fQuery)
+
+        }
+        else {
+            fQuery = `  `
+        }
+
         try {
             await sql.connect(`mssql://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.DB_HOST}/${process.env.DB_MAIN}`)
-            const result = await sql.query`                
-            select distinct a.SaleNo as SaleNo, a.StationName StationName, a.CardAmount as CardAmount, 
-                a.CashAmount as CashAmount, b.Quantity as Quantity, b.ItemName as ItemName, a.SaleDate as SaleDate
+            let ctqry = `
+            select count(1) as cnt
+            from Sales a
+            inner join 
+            SalesItemDetail b on 
+            a.SaleNo = b.SaleNo
+            WHERE 1=1 
+            ${fQuery}
+            `
+            let countQuery = await sql.query(ctqry);
+            if (pageNumber === 0)
+                pageNumber = 1
+            let cnt = countQuery.recordset[0].cnt;
+            if (pageNumber === 1 && cnt > 50 && 100 < cnt)
+                perPage = 50
+            else if (Math.floor(cnt / 50) === pageNumber) {
+                perPage = cnt - pageNumber * 50;
+            }
+            console.log(cnt)
+            console.log(perPage)
+            console.log(pageNumber)
+
+            let qqq = `                
+            select a.SaleNo as SaleNo, a.StationName StationName, a.CardAmount as CardAmount, 
+                a.CashAmount as CashAmount, b.Quantity as Quantity, b.ItemName as ItemName, a.SaleDate as SaleDate, b.UnitPrice as UnitPrice, b.NozzleNo as NozzleNo
                 from Sales a
-                right join 
+                inner join 
                 SalesItemDetail b on 
                 a.SaleNo = b.SaleNo
+                WHERE 1=1 
+                ${fQuery}
+                order by a.SaleNo 
+                offset  ${(pageNumber - 1) * perPage} rows
+                fetch next ${perPage} rows only
                 `
-            resp.data = result.recordset;
+            let exportData = `                
+                select a.SaleNo as SaleNo, a.StationName StationName, a.CardAmount as CardAmount, 
+                    a.CashAmount as CashAmount, b.Quantity as Quantity, b.ItemName as ItemName, a.SaleDate as SaleDate, b.UnitPrice as UnitPrice, b.NozzleNo as NozzleNo
+                    from Sales a
+                    inner join 
+                    SalesItemDetail b on 
+                    a.SaleNo = b.SaleNo
+                    WHERE 1=1 
+                    ${fQuery}
+                    order by a.SaleNo 
+                    `
+            const result = await sql.query(qqq)
+
+
+            resp.data = result.recordset
+            const exportResult = await sql.query(exportData)
+            resp.exportData = exportResult.recordset
+            resp.cnt = cnt;
         } catch (err) {
             console.log("------", err)
         }
@@ -34,6 +113,7 @@ function setup({ app, instance }) {
             data: [],
             message: "",
         };
+
         if (sales) {
             let qry = `  INSERT INTO [dbo].[Sales]
         (

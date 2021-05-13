@@ -54,7 +54,7 @@ function setup({ app, instance }) {
         ${sales[j].SaleNo},
         '${sales[j].StationNo}',
         '${sales[j].ItemCode}',
-        '${sales[j].ItemName}',
+        N'${sales[j].ItemName}',
         ${sales[j].Quantity},
         ${sales[j].UnitPrice},
         ${sales[j].Vat},
