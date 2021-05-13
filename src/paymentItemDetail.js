@@ -70,7 +70,6 @@ function setup({ app, instance }) {
             try {
                 await sql.connect(`mssql://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.DB_HOST}/${process.env.DB_MAIN}`)
                 const result = await sql.query(qry.slice(0, -1));
-                resp.message = `Affected Detail rows count : ${result.rowsAffected[0]}`
             } catch (err) {
                 //
                 console.log("qry ERRROR", err);
