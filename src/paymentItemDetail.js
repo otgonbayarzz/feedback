@@ -24,8 +24,6 @@ function setup({ app, instance }) {
     });
     app.post("/api/paymentItemDetail", async (req, res) => {
         let sales = req.body.data;
-
-
         let resp = {
             success: true,
             data: [],

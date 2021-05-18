@@ -55,6 +55,7 @@ function setup({ app, instance }) {
             SalesItemDetail b on 
             a.SaleNo = b.SaleNo
             WHERE 1=1 
+            AND b.SaleNo = b.Id
             ${fQuery}
             `
             let countQuery = await sql.query(ctqry);
@@ -78,6 +79,7 @@ function setup({ app, instance }) {
                 SalesItemDetail b on 
                 a.SaleNo = b.SaleNo
                 WHERE 1=1 
+                AND b.SaleNo = b.Id
                 ${fQuery}
                 order by a.SaleNo 
                 offset  ${(pageNumber - 1) * perPage} rows
@@ -91,6 +93,7 @@ function setup({ app, instance }) {
                     SalesItemDetail b on 
                     a.SaleNo = b.SaleNo
                     WHERE 1=1 
+                    AND b.SaleNo = b.Id
                     ${fQuery}
                     order by a.SaleNo 
                     `
@@ -164,8 +167,7 @@ function setup({ app, instance }) {
 
                 await sql.connect(`mssql://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.DB_HOST}/${process.env.DB_MAIN}`)
                 const result = await sql.query(qry.slice(0, -1));
-                console.log(qry)
-                resp.message = `Affected rows count : ${result.rowsAffected[0]}`
+                
             } catch (err) {
                 console.log(err)
             }
