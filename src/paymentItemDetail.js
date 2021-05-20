@@ -50,7 +50,7 @@ function setup({ app, instance }) {
                 qry += `
            (
         ${sales[j].SaleNo},
-        '${sales[j].StationNo}',
+        N'${sales[j].StationNo}',
         '${sales[j].ItemCode}',
         N'${sales[j].ItemName}',
         ${sales[j].Quantity},
@@ -68,6 +68,7 @@ function setup({ app, instance }) {
             try {
                 await sql.connect(`mssql://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.DB_HOST}/${process.env.DB_MAIN}`)
                 const result = await sql.query(qry.slice(0, -1));
+                sleep(1000);
             } catch (err) {
                 //
                 console.log("qry ERRROR", err);

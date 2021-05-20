@@ -17,19 +17,27 @@ async function main() {
 
     try {
         await sql.connect(`mssql://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.DB_HOST}/${process.env.DB_CLIENT}`)
-        let rr = await sql.query`select * from Trade where TradeId > ${maxIdTrade}`
+        let rr = await sql.query`
+        select * from (
+            select 
+            *,
+            RANK () OVER ( 
+                        PARTITION BY TotalizerCount
+                        ORDER BY TradeId DESC
+                    ) rank 
+            from demo.dbo.Trade
+            ) a
+            where rank = 1 and TradeId > ${maxIdTrade}`
         if (rr.recordset.length > 0) {
-
             let ids = rr.recordset.map(i => i.TradeId)
             maxIdTrade = Math.max.apply(null, ids);
             let batchUpdate = await sql.query`UPDATE BatchStatus set LastValue = ${maxIdTrade} WHERE TableName = 'Trade'`
-
             let sales = rr.recordset;
-
             for (let j = 0; j < sales.length; j += 1) {
                 let qry = `  INSERT INTO [dbo].[SalesItemDetailOffline]
             (
-            [StationNo]
+                [SaleNo]
+            ,[StationNo]
             ,[ItemCode]
             ,[ItemName]
             ,[Quantity]
@@ -45,7 +53,8 @@ async function main() {
       VALUES`;
                 qry += `
                (
-            'Shts-02',
+                ${sales[j].TradeId},
+            N'ШТС-02',
             '${sales[j].ItemCode}',
             N'${sales[j].ItemName}',
             ${sales[j].Quantity},
@@ -72,7 +81,8 @@ async function main() {
                 let qry1
                     = `INSERT INTO [dbo].[SalesOffline]
                     (
-                    [BillId]
+                        [SaleNo]
+                    ,[BillId]
                     ,[SaleDate]
                     ,[StationNo]
                     ,[StationName]
@@ -92,10 +102,11 @@ async function main() {
             VALUES`;
                 qry1 += `
                     (
+                        ${sales[j].TradeId},
                         '', 
                         '${moment.utc(sales[j].TradeDate).format("YYYY-MM-DD HH:mm:ss")}'
                     ,'002'
-                    ,'Shts-02'
+                    ,N'ШТС-02'
                     ,''
                     ,''
                     ,''
@@ -122,27 +133,47 @@ async function main() {
                 }
             }
 
-
-
-
-
-
         }
 
 
 
 
-        console.log("max id detail : ", maxIdDetail)
-        console.log("max id  : ", maxId)
-        console.log("max id Trade : ", maxIdTrade)
-        const result = await sql.query`select * from SalesOffline where SaleNo > ${maxId}`
+
+
+
+
         const resultDetail = await sql.query`select * from SalesItemDetailOffline where SaleNo > ${maxIdDetail}`
+        console.log("SalesItemDetailOffline", resultDetail.recordset.length)
+        if (resultDetail.recordset.length > 0) {
+            let ids = resultDetail.recordset.map(i => i.SaleNo)
+            maxIdDetail = Math.max.apply(null, ids);
+            for (let j = 0; j < resultDetail.recordset.length; j += 1) {
+                let tt = []
+                tt.push(resultDetail.recordset[j])
+                sleep(1000);
+                let res1 = await axios
+                    .create({
+                        timeout: 40000
+                    })
+                    .post(`${process.env.API_URL}/api/paymentItemDetail/`, { "data": tt })
+                    .catch(function (error) {
+                        console.log("backend error", error);
+                    });
+                sleep(1000);
+
+            }
+            let batchUpdateDetail = await sql.query`UPDATE BatchStatus set LastValue = ${maxIdDetail} WHERE TableName = 'SalesItemDetail'`
+            sleep(1000);
+        }
+        const result = await sql.query`select * from SalesOffline where SaleNo > ${maxId}`
         if (result.recordset.length > 0) {
             let ids = result.recordset.map(i => i.SaleNo)
             maxId = Math.max.apply(null, ids);
             for (let j = 0; j < result.recordset.length; j += 1) {
                 let tt = []
                 tt.push(result.recordset[j])
+                sleep(1000);
+                sleep(1000);
                 let res = await axios
                     .create({
                         timeout: 40000
@@ -152,36 +183,15 @@ async function main() {
                         console.log("backend error", error);
                     });
 
+                sleep(1000);
                 let batchUpdate = await sql.query`UPDATE BatchStatus set LastValue = ${maxId} WHERE TableName = 'Sales'`
+                sleep(1000);
             }
         }
-        else {
-            sleep(6000);
-            console.log("##############sleeping##################");
-        }
 
-        if (resultDetail.recordset.length > 0) {
-            let ids = resultDetail.recordset.map(i => i.SaleNo)
-            maxIdDetail = Math.max.apply(null, ids);
-            for (let j = 0; j < resultDetail.recordset.length; j += 1) {
-                let tt = []
-                tt.push(resultDetail.recordset[j])
-                
-                let res1 = await axios
-                .create({
-                    timeout: 40000
-                })
-                .post(`${process.env.API_URL}/api/paymentItemDetail/`, { "data": tt })
-                .catch(function (error) {
-                    console.log("backend error", error);
-                });
 
-            }
-            let batchUpdateDetail = await sql.query`UPDATE BatchStatus set LastValue = ${maxIdDetail} WHERE TableName = 'SalesItemDetail'`
-        }
-        else {
-            sleep(6000);
-        }
+
+
 
     } catch (err) {
         console.log("here", err)
