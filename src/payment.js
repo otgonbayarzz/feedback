@@ -159,7 +159,12 @@ function setup({ app, instance }) {
                     inner join 
                     SalesItemDetail b on 
                     a.SaleNo = b.SaleNo
-                 
+
+                    WHERE 1=1 
+                    AND b.SaleNo = b.Id
+
+                     ${fQuery}
+                   
                     order by a.SaleNo 
                     `
             const exportResult = await sql.query(exportData)
